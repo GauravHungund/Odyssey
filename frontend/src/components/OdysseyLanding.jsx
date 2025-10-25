@@ -1,23 +1,52 @@
+import React from "react";
+import { motion as Motion } from "motion/react";
 import RightGrid from "./RightGrid";
+import HomeButtons from "./HomeButtons";
 
 export default function OdysseyLanding() {
   return (
     <div
-      className="mx-auto max-w-[1600px] grid grid-cols-[1fr_900px] items-center"
+      className="mx-auto max-w-[1600px] grid lg:grid-cols-[1fr_900px] md:grid-cols-1 items-center px-6"
       style={{
-        minHeight: "calc(100vh - 80px)", // subtract navbar height
-        marginTop: "10px", // offset so it visually centers under the navbar
+        minHeight: "calc(100vh - 80px)", // Adjust for navbar height
+        marginTop: "10px",
       }}
     >
-      {/* left column: headline */}
-      <div className="pl-16 flex items-center justify-start">
-        <h1 className="font-vogue text-[8rem] leading-none tracking-tight">
+      {/* Left Column — Text Section */}
+      <div className="pl-10 lg:pl-16 flex flex-col items-start justify-center text-white py-10">
+        {/* Hero Title */}
+        <Motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="font-vogue text-[8rem] md:text-[6rem] sm:text-[4rem] leading-none tracking-tight"
+        >
           Odyssey
-        </h1>
+        </Motion.h1>
+
+        {/* Subheading */}
+        <Motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+          className="mt-4 text-xl md:text-lg sm:text-base text-white/70 tracking-wide"
+        >
+          Your journey, perfectly mapped.
+        </Motion.p>
+
+        {/* Buttons Section */}
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+          className="mt-10"
+        >
+          <HomeButtons />
+        </Motion.div>
       </div>
 
-      {/* right column: grid panel */}
-      <div className="w-[900px] -translate-x-20 flex items-center justify-center">
+      {/* Right Column — Grid Section */}
+      <div className="w-full lg:w-[900px] md:mt-16 flex items-center justify-center">
         <RightGrid />
       </div>
     </div>

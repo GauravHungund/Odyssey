@@ -8,7 +8,7 @@ const PANEL_WIDTH = 900;
 export default function RightGrid() {
   return (
     <div className="shrink-0" style={{ width: PANEL_WIDTH }}>
-      <div className="flex flex-col gap-1 overflow-x-hidden">
+      <div className="flex flex-col gap-2 overflow-x-hidden">
         <GridRow2 />
         <GridRow1 />
         <GridRow3 />

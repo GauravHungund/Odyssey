@@ -6,9 +6,6 @@ export default function GridRow3() {
       <BlankTile />
       <ImgTile delay={0.4} />
       <BlankTile />
-      
-      
-
     </div>
   );
 }

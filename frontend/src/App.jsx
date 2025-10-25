@@ -1,15 +1,21 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import NavBar from "./components/NavBar";
 import OdysseyLanding from "./components/OdysseyLanding";
+import SignIn from "./components/Signin";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Fixed, on top */}
+    <Router>
+      {/* 🌍 Navbar sits outside all route content */}
       <NavBar />
-      {/* Offset the content so it doesn't sit under the fixed navbar */}
-      <main className="pt-16"> 
-        <OdysseyLanding />
-      </main>
-    </div>
+
+      {/* Page container (below navbar) */}
+      <div className="relative min-h-screen bg-black text-white">
+        <Routes>
+          <Route path="/" element={<OdysseyLanding />} />
+          <Route path="/login" element={<SignIn />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
