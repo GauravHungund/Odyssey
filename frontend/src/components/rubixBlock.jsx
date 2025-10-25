@@ -17,6 +17,7 @@ const AlternatingSweepBox = ({ delay = 0 }) => {
 
   useEffect(() => {
     let current = image;
+    let mounted = true;
 
     const pickNewImage = () => {
       let next = current;
@@ -28,7 +29,7 @@ const AlternatingSweepBox = ({ delay = 0 }) => {
     const run = async () => {
       if (delay > 0) await new Promise((res) => setTimeout(res, delay * 1000));
 
-      while (true) {
+      while (mounted) {
         const duration = 3 + Math.random() * 3;
 
         // Sweep to cover (left → right)
@@ -37,21 +38,25 @@ const AlternatingSweepBox = ({ delay = 0 }) => {
           transition: { duration: duration / 2, ease: "easeInOut" },
         });
 
-        // 🖼️ Change image when fully covered
+        // Change image while covered
         pickNewImage();
 
         // Sweep back (right → left)
         await controls.start({
           width: ["100%", "0%"],
-          border: ["100%", "0%"],
           transition: { duration: duration / 2, ease: "easeInOut" },
         });
 
+        // Small pause before next sweep
         await new Promise((res) => setTimeout(res, 300));
       }
     };
 
     run();
+
+    return () => {
+      mounted = false;
+    };
   }, [controls, delay]);
 
   return (
@@ -63,7 +68,6 @@ const AlternatingSweepBox = ({ delay = 0 }) => {
         backgroundPosition: "center",
       }}
     >
-      {/* 👇 You can replace bg-black with your glass class later */}
       <Motion.div
         animate={controls}
         className="absolute top-0 left-0 h-full bg-black rounded-lg"
