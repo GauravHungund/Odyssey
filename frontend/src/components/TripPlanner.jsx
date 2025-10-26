@@ -3,12 +3,11 @@ import React, { useState, useEffect } from "react";
 const AWS_REGION = "us-east-2";
 const API_KEY = import.meta.env.VITE_AWS_MAPS_API_KEY;
 
-export default function TripPlanner({ onAddPlace }) {
+export default function TripPlanner({ places = [], onAddPlace, onRemovePlace }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [tripList, setTripList] = useState([]);
 
   // 🧭 Get user location once
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function TripPlanner({ onAddPlace }) {
     }
   }, []);
 
-  // 🔍 Step 1: Fetch AWS Places suggestions (returns PlaceId, Address, Position)
+  // 🔍 Fetch suggestions (using your /search-text response shape)
   const fetchSuggestions = async (text) => {
     if (text.trim().length < 3 || !userLocation) {
       setSuggestions([]);
@@ -63,21 +62,17 @@ export default function TripPlanner({ onAddPlace }) {
     }
   };
 
-  // 📍 When a user selects a place from the dropdown
+  // 📍 Add selected suggestion to parent 'places'
   const handleSelect = async (place) => {
-    console.log("📍 Selected:", place);
     setQuery("");
     setSuggestions([]);
-    setLoading(true);
-
-    try {
-      // ✅ Use coordinates directly from API response
-      const selected = {
-        title: place.title,
-        coordinates: place.coordinates, // [lon, lat]
-        address: place.address,
-        placeId: place.placeId,
-      };
+    onAddPlace({
+      title: place.title,
+      coordinates: place.coordinates,
+      address: place.address,
+      placeId: place.placeId,
+    });
+  };
 
       // Add to trip list and map
       setTripList((prev) => [...prev, selected]);
@@ -92,8 +87,7 @@ export default function TripPlanner({ onAddPlace }) {
   };
 
   const handleRemove = (index) => {
-    const updated = tripList.filter((_, i) => i !== index);
-    setTripList(updated);
+    onRemovePlace?.(index);
   };
 
   return (
@@ -144,7 +138,7 @@ export default function TripPlanner({ onAddPlace }) {
           >
             {suggestions.map((s, i) => (
               <li
-                key={i}
+                key={`${s.placeId ?? s.title}-${i}`}
                 onClick={() => handleSelect(s)}
                 className="p-3 hover:bg-white/20 cursor-pointer transition-colors"
               >
@@ -163,15 +157,15 @@ export default function TripPlanner({ onAddPlace }) {
       <div className="bg-black border border-white/30 rounded-xl p-4 backdrop-blur-md shadow-md">
         <h2 className="text-lg font-semibold mb-3">Your Trip Plan</h2>
 
-        {tripList.length === 0 ? (
+        {places.length === 0 ? (
           <p className="text-white/60 text-sm">
             No locations added yet — search and add places to your plan.
           </p>
         ) : (
           <ul className="space-y-2">
-            {tripList.map((place, index) => (
+            {places.map((place, index) => (
               <li
-                key={index}
+                key={`${place.placeId ?? place.title}-${index}`}
                 className="p-3 bg-white/5 rounded-lg border border-white/20 flex justify-between items-start"
               >
                 <div>
