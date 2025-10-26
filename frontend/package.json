@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-location": "^3.917.0",
     "@tailwindcss/vite": "^4.1.16",
+    "aws-sdk": "^2.1692.0",
+    "maplibre-gl": "^5.9.0",
     "motion": "^12.23.24",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
