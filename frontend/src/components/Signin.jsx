@@ -37,7 +37,7 @@ const Signin = () => {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
-        } catch {}
+        } catch {e}
         setError(errorMessage);
         return;
       }
@@ -85,7 +85,7 @@ const Signin = () => {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch {}
+        } catch {e}
         setSignupError(errorMessage);
         return;
       }

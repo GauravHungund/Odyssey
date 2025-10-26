@@ -1,158 +1,182 @@
-import React, { useEffect, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
-import {
-  SearchPlaceIndexForTextCommand,
-  LocationClient,
-} from "@aws-sdk/client-location";
-import { locationClient } from "../aws.config";
+import React, { useState, useEffect } from "react";
 
-// Simple car icon URL for markers
-const carIcon = "https://cdn-icons-png.flaticon.com/512/743/743922.png";
+const AWS_REGION = "us-east-2";
+const API_KEY = import.meta.env.VITE_AWS_MAPS_API_KEY;
 
-const TripPlanner = () => {
-  const mapContainerRef = useRef(null);
-  const [map, setMap] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+export default function TripPlanner({ onAddPlace }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [places, setPlaces] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [tripList, setTripList] = useState([]);
 
-  // 🧭 Initialize MapLibre + user location
+  // 🧭 Get user location once
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    const initializeMap = async (coords) => {
-      const mapInstance = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style:
-          "https://maps.geo.us-east-2.amazonaws.com/maps/v0/maps/OdysseyMap/style-descriptor",
-        center: coords || [0, 0],
-        zoom: coords ? 12 : 2,
-      });
-
-      setMap(mapInstance);
-
-      // Add user location marker
-      if (coords) {
-        new maplibregl.Marker({ color: "#00BFFF" })
-          .setLngLat(coords)
-          .setPopup(new maplibregl.Popup().setText("You are here"))
-          .addTo(mapInstance);
-      }
-    };
-
-    // Try to get browser location
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = [pos.coords.longitude, pos.coords.latitude];
-        setUserLocation(coords);
-        initializeMap(coords);
-      },
-      () => initializeMap([0, 0])
-    );
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation([pos.coords.longitude, pos.coords.latitude]),
+        () => setUserLocation([-122.009, 37.3349]) // fallback Cupertino
+      );
+    } else {
+      setUserLocation([-122.009, 37.3349]);
+    }
   }, []);
 
-  // 🔍 Fetch suggestions from AWS Places Index
+  // 🔍 Step 1: Fetch AWS Places suggestions (returns PlaceId, Address, Position)
   const fetchSuggestions = async (text) => {
     if (text.trim().length < 3 || !userLocation) {
       setSuggestions([]);
       return;
     }
 
-    const command = new SearchPlaceIndexForTextCommand({
-      IndexName: "OdysseyPlaceIndex",
-      Text: text,
-      BiasPosition: userLocation, // prioritize nearby results
-      MaxResults: 5,
-    });
-
+    setLoading(true);
     try {
-      const response = await locationClient.send(command);
+      const res = await fetch(`/places/v2/search-text?key=${API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          QueryText: text,
+          BiasPosition: userLocation, // [lon, lat]
+          MaxResults: 5,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("✅ AWS suggestions returned:", data);
+
+      // ✅ Extract PlaceId, Title, Address.Label, Position
       const results =
-        response.Results?.map((r) => ({
-          name: r.Place.Label,
-          coordinates: r.Place.Geometry.Point,
+        data.ResultItems?.map((r) => ({
+          title: r.Title,
+          placeId: r.PlaceId,
+          address: r.Address?.Label || "",
+          coordinates: r.Position, // [lon, lat]
         })) || [];
+
+      console.log("🧭 Parsed suggestions:", results);
       setSuggestions(results);
     } catch (err) {
-      console.error("Error fetching suggestions:", err);
+      console.error("❌ Suggest API error:", err);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✏️ Handle input change (live search)
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setQuery(value);
-    fetchSuggestions(value);
-  };
-
-  // ➕ Add a location to visit list
-  const addToTrip = (place) => {
-    setPlaces((prev) => [...prev, place]);
-    setSuggestions([]);
+  // 📍 When a user selects a place from the dropdown
+  const handleSelect = async (place) => {
+    console.log("📍 Selected:", place);
     setQuery("");
+    setSuggestions([]);
+    setLoading(true);
 
-    // Add pin on map
-    if (map) {
-      new maplibregl.Marker({ color: "#FF4500" })
-        .setLngLat(place.coordinates)
-        .setPopup(new maplibregl.Popup().setText(place.name))
-        .addTo(map);
+    try {
+      // ✅ Use coordinates directly from API response
+      const selected = {
+        title: place.title,
+        coordinates: place.coordinates, // [lon, lat]
+        address: place.address,
+        placeId: place.placeId,
+      };
+
+      // Add to trip list and map
+      setTripList((prev) => [...prev, selected]);
+      onAddPlace(selected);
+
+      console.log("✅ Added place:", selected);
+    } catch (err) {
+      console.error("❌ Handle select error:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleRemove = (index) => {
+    const updated = tripList.filter((_, i) => i !== index);
+    setTripList(updated);
   };
 
   return (
-    <div className="w-screen h-screen bg-black text-white flex flex-col items-center">
-      {/* Search Input + Dropdown */}
-      <div className="w-[80%] max-w-2xl mt-8 relative">
+    <div className="w-[80%] max-w-2xl mt-10 text-white relative z-[9999] space-y-8">
+      {/* 🔍 Search Input */}
+      <div className="relative">
         <input
           type="text"
           placeholder="Search nearby places..."
           value={query}
-          onChange={handleChange}
-          className="w-full p-3 rounded-full bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white"
+          onChange={(e) => {
+            const value = e.target.value;
+            setQuery(value);
+            fetchSuggestions(value);
+          }}
+          className="w-full p-3 rounded-full bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white transition-all"
         />
+
+        {loading && (
+          <p className="absolute right-4 top-3 text-white/50 text-sm animate-pulse">
+            Searching...
+          </p>
+        )}
+
+        {/* ✨ Animated dropdown */}
         {suggestions.length > 0 && (
-          <ul className="absolute mt-2 w-full bg-white/10 border border-white/30 rounded-xl overflow-hidden backdrop-blur-md z-10">
-            {suggestions.map((s, idx) => (
+          <ul
+            className="
+              absolute left-0 top-[110%]
+              bg-black/90 text-white
+              border border-white/30
+              rounded-xl shadow-2xl backdrop-blur-xl
+              overflow-hidden z-[99999]
+              animate-fadeIn
+            "
+            style={{ width: "100%" }}
+          >
+            {suggestions.map((s, i) => (
               <li
-                key={idx}
-                onClick={() => addToTrip(s)}
-                className="p-3 hover:bg-white/20 cursor-pointer"
+                key={i}
+                onClick={() => handleSelect(s)}
+                className="p-3 hover:bg-white/20 cursor-pointer transition-colors"
               >
-                {s.name}
+                <span className="font-medium">{s.title}</span>
+                {s.address && (
+                  <p className="text-xs text-white/60 truncate">{s.address}</p>
+                )}
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* Itinerary List */}
-      <div className="w-[80%] max-w-2xl mt-6 mb-4">
-        <h2 className="text-lg font-semibold mb-2">Your Trip List:</h2>
-        <div className="flex flex-col gap-2">
-          {places.length > 0 ? (
-            places.map((p, idx) => (
-              <div
-                key={idx}
-                className="p-3 bg-white/10 border border-white/30 rounded-lg"
-              >
-                {p.name}
-              </div>
-            ))
-          ) : (
-            <p className="text-white/60">No places added yet.</p>
-          )}
-        </div>
-      </div>
+      {/* 🧭 Trip Plan List */}
+      <div className="bg-white/10 border border-white/30 rounded-xl p-4 backdrop-blur-md shadow-md">
+        <h2 className="text-lg font-semibold mb-3">Your Trip Plan</h2>
 
-      {/* Map */}
-      <div
-        ref={mapContainerRef}
-        className="w-[90%] h-[60vh] border-2 border-white rounded-lg"
-      ></div>
+        {tripList.length === 0 ? (
+          <p className="text-white/60 text-sm">
+            No locations added yet — search and add places to your plan.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {tripList.map((place, index) => (
+              <li
+                key={index}
+                className="p-3 bg-white/5 rounded-lg border border-white/20 flex justify-between items-start"
+              >
+                <div>
+                  <p className="font-medium">{place.title}</p>
+                  <p className="text-xs text-white/60">{place.address}</p>
+                </div>
+                <button
+                  onClick={() => handleRemove(index)}
+                  className="text-red-400 hover:text-red-300 text-sm font-medium"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
-};
-
-export default TripPlanner;
+}

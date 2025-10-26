@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-location": "^3.917.0",
     "@tailwindcss/vite": "^4.1.16",
+    "aws-amplify": "^6.15.7",
     "aws-sdk": "^2.1692.0",
     "leaflet": "^1.9.4",
     "maplibre-gl": "^5.9.0",

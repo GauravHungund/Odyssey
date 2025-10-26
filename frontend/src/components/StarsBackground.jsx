@@ -1,7 +1,7 @@
 // components/StarBackground.jsx
 import React from "react";
 
-const StarBackground = ({ count = 100 }) => {
+const StarBackground = ({ count = 200 }) => {
   return (
     <div className="absolute inset-0 overflow-hidden z-0">
       {[...Array(count)].map((_, i) => (
