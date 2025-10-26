@@ -3,6 +3,8 @@ import NavBar from "./components/NavBar";
 import OdysseyLanding from "./components/OdysseyLanding";
 import SignIn from "./components/Signin";
 import TripMap from "./components/TripMap";
+import Trip from "./components/TripPlanner";
+import About from "./components/About";
 
 export default function App() {
   return (
@@ -15,7 +17,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<OdysseyLanding />} />
           <Route path="/login" element={<SignIn />} />
-          <Route path="/trip" element={<TripMap/>} />
+          <Route path="/trip" element={<TripMap />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </div>
     </Router>

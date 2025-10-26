@@ -7,8 +7,18 @@
     font-style: normal;
   }
 
-@layer base {
-  html, body {
-    @apply bg-black;
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
   }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 3s infinite ease-in-out;
 }
