@@ -3,6 +3,9 @@
   publish = "frontend/dist"
   functions = "netlify/functions"
 
+[build.environment]
+  NODE_VERSION = "20.17.0"
+
 ## Function routes (must come before SPA fallback)
 [[redirects]]
   from = "/api/*"
