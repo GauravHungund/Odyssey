@@ -1,0 +1,29 @@
+[build]
+  command = "cd frontend && npm ci && npm run build"
+  publish = "frontend/dist"
+  functions = "netlify/functions"
+
+## Function routes (must come before SPA fallback)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api-proxy"
+  status = 200
+
+[[redirects]]
+  from = "/places/*"
+  to = "/.netlify/functions/places-proxy"
+  status = 200
+
+[[redirects]]
+  from = "/serpapi/*"
+  to = "/.netlify/functions/serpapi-proxy"
+  status = 200
+
+## SPA fallback so React Router works on refresh and deep links
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Set env in Netlify UI for: API_BASE, PLACES_BASE, SERPAPI_BASE, SERPAPI_KEY
+
