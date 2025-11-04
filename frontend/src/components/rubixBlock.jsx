@@ -12,7 +12,7 @@ import StatueOfLiberty from "../assets/StatueOfLiberty.png";
 import Chinatown from "../assets/Chinatown.png";
 import Bakery from "../assets/bakery.png";
 import alcatraz from "../assets/alcatraz.png";
-import Mountfuji from "../assets/Mountfuji.png";
+import Mountfuji from "../assets/MountFuji.png";
 import EiffelTower from "../assets/EiffelTower.png";
 import UnionSquare from "../assets/UnionSquare.png";
 import Tahoe from "../assets/Tahoe.png";
