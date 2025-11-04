@@ -10,7 +10,7 @@ import Giza from "../assets/Giza.png";
 import Greatwall from "../assets/Greatwall.png";
 import StatueOfLiberty from "../assets/StatueOfLiberty.png";
 import Chinatown from "../assets/Chinatown.png";
-import Bakery from "../assets/Bakery.png";
+import Bakery from "../assets/bakery.png";
 import alcatraz from "../assets/alcatraz.png";
 import Mountfuji from "../assets/MOuntfuji.png";
 import EiffelTower from "../assets/EiffelTower.png";
